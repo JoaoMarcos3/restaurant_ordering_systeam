@@ -108,6 +108,27 @@ app.get("/pedidos", async (_req, res) => {
   return res.status(200).json(data);
 });
 
+app.get("/pedidos/:id", async (req, res) => {
+  const { data, error } = await supabase.from("orders").select("*, order_items(*)").eq("id", req.params.id).maybeSingle();
+  if (error) return res.status(500).json({ message: "Erro ao buscar pedido.", detail: error.message });
+  if (!data) return res.status(404).json({ message: "Pedido não encontrado." });
+  return res.status(200).json(data);
+});
+
+app.patch("/pedidos/:id/status", async (req, res) => {
+  const { status } = req.body;
+  const statuses = ["recebido", "preparando", "saiu_para_entrega", "concluido", "cancelado"];
+  if (typeof status !== "string" || !statuses.includes(status)) {
+    return res.status(400).json({ message: "Status inválido.", allowed: statuses });
+  }
+  const { data, error } = await supabase.rpc("update_order_status", { p_order_id: req.params.id, p_new_status: status });
+  if (error) {
+    if (error.message.includes("não encontrado")) return res.status(404).json({ message: "Pedido não encontrado." });
+    return res.status(409).json({ message: "Transição de status não permitida.", detail: error.message });
+  }
+  return res.status(200).json(data);
+});
+
 app.post("/pedidos", async (req, res) => {
   const { customerName, items } = req.body;
   if (typeof customerName !== "string" || !customerName.trim() || !Array.isArray(items) || items.length === 0) {
