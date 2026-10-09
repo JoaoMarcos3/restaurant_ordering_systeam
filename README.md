@@ -9,20 +9,23 @@ API REST em TypeScript, Express e Supabase. O projeto foi dividido em etapas de 
 | `aula-3` | Persistência no Supabase, validações, pedidos transacionais e esquema SQL. |
 | `aula-4` | Consulta detalhada do pedido e fluxo controlado de status. |
 | `aula-5` | Paginação e filtros para consultas de produtos e pedidos. |
+| `aula-6` | Verificação de saúde, índice do catálogo e dados iniciais repetíveis. |
 
 ## Executar
 
 1. Instale Node.js e npm.
 2. Instale as dependências com `npm install`.
 3. Copie `.env.example` para `.env` e preencha `SUPABASE_URL` e `SUPABASE_SECRET_KEY`.
-4. No painel do Supabase, abra o SQL Editor e execute as migrações em ordem: `202610090001_schema_inicial.sql`, depois `202610090002_order_status.sql`.
-5. Inicie a API com `npm run dev`.
+4. No painel do Supabase, abra o SQL Editor e execute em ordem `202610090001_schema_inicial.sql`, `202610090002_order_status.sql` e `202610090003_catalogo_unico.sql`.
+5. Execute `supabase/seed.sql` para inserir categorias e produtos iniciais; o script pode ser executado novamente sem duplicar dados.
+6. Inicie a API com `npm run dev`.
 
 A API fica em `http://localhost:3000`. A chave secreta é usada apenas pelo servidor e o arquivo `.env` não deve ser versionado.
 
 ## Rotas
 
 - `GET /` — informações da API.
+- `GET /health` — verifica a conexão com o Supabase.
 - `GET /categorias`, `GET /categorias/:id`, `POST /categorias`, `PUT /categorias/:id`, `DELETE /categorias/:id`.
 - `GET /produtos`, `GET /produtos/:id`, `POST /produtos`, `PUT /produtos/:id`, `DELETE /produtos/:id`.
 - `GET /pedidos`, `GET /pedidos/:id`, `POST /pedidos` e `PATCH /pedidos/:id/status`.

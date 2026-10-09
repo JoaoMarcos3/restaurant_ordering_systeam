@@ -16,6 +16,12 @@ app.get("/", (_req, res) => {
   res.status(200).json({ message: "API Restaurante", version: "1.0.0" });
 });
 
+app.get("/health", async (_req, res) => {
+  const { error } = await supabase.from("categories").select("id", { head: true, count: "exact" });
+  if (error) return res.status(503).json({ status: "unavailable", database: "disconnected" });
+  return res.status(200).json({ status: "ok", database: "connected" });
+});
+
 app.get("/categorias", async (_req, res) => {
   const { data, error } = await supabase.from("categories").select("*").order("name");
   if (error) return res.status(500).json({ message: "Erro ao buscar categorias.", detail: error.message });
