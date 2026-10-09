@@ -5,7 +5,7 @@ API REST em TypeScript, Express e Supabase. O projeto foi dividido em etapas de 
 | Branch | Conteúdo |
 | --- | --- |
 | `aula-1` | Estrutura inicial da API e endpoints básicos. |
-| `aula-2` | Evolução do catálogo e implementação de pedidos em memória. |
+| `aula-2` | Refatoração da API e primeira evolução do catálogo. |
 | `aula-3` | Persistência no Supabase, validações, pedidos transacionais e esquema SQL. |
 | `aula-4` | Consulta detalhada do pedido e fluxo controlado de status. |
 | `aula-5` | Paginação e filtros para consultas de produtos e pedidos. |
