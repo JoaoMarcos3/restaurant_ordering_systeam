@@ -8,6 +8,7 @@ API REST em TypeScript, Express e Supabase. O projeto foi dividido em etapas de 
 | `aula-2` | Evolução do catálogo e implementação de pedidos em memória. |
 | `aula-3` | Persistência no Supabase, validações, pedidos transacionais e esquema SQL. |
 | `aula-4` | Consulta detalhada do pedido e fluxo controlado de status. |
+| `aula-5` | Paginação e filtros para consultas de produtos e pedidos. |
 
 ## Executar
 
@@ -28,7 +29,7 @@ A API fica em `http://localhost:3000`. A chave secreta é usada apenas pelo serv
 
 Os status seguem o fluxo `recebido` → `preparando` → `saiu_para_entrega` → `concluido`. O pedido também pode ser cancelado enquanto estiver recebido ou em preparação.
 
-Para criar um produto, envie `categoryId`, `name`, `description` e `price`. Para filtrar produtos por categoria, use `GET /produtos?categoryId=<uuid>`.
+Para criar um produto, envie `categoryId`, `name`, `description` e `price`. As listas são paginadas (padrão: 20 itens): use `page` e `limit` (máximo 100). Produtos aceitam filtro `categoryId` e busca `q`; pedidos aceitam filtro `status`. Exemplos: `GET /produtos?categoryId=<uuid>&q=calabresa&page=1&limit=10` e `GET /pedidos?status=preparando&page=1&limit=20`.
 
 Exemplo de criação de pedido:
 

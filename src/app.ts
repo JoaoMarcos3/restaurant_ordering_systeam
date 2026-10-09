@@ -5,6 +5,13 @@ import supabase from "./config/supabase.js";
 const app = express();
 app.use(express.json());
 
+function pagination(query: express.Request["query"]) {
+  const pageValue = typeof query.page === "string" ? Number(query.page) : 1;
+  const limitValue = typeof query.limit === "string" ? Number(query.limit) : 20;
+  if (!Number.isInteger(pageValue) || pageValue < 1 || !Number.isInteger(limitValue) || limitValue < 1 || limitValue > 100) return null;
+  return { page: pageValue, limit: limitValue, from: (pageValue - 1) * limitValue, to: pageValue * limitValue - 1 };
+}
+
 app.get("/", (_req, res) => {
   res.status(200).json({ message: "API Restaurante", version: "1.0.0" });
 });
@@ -52,11 +59,14 @@ app.delete("/categorias/:id", async (req, res) => {
 });
 
 app.get("/produtos", async (req, res) => {
-  let query = supabase.from("products").select("*, categories(id, name)").order("name");
+  const page = pagination(req.query);
+  if (!page) return res.status(400).json({ message: "Use page maior que zero e limit entre 1 e 100." });
+  let query = supabase.from("products").select("*, categories(id, name)", { count: "exact" }).order("name");
   if (typeof req.query.categoryId === "string") query = query.eq("category_id", req.query.categoryId);
-  const { data, error } = await query;
+  if (typeof req.query.q === "string" && req.query.q.trim()) query = query.ilike("name", `%${req.query.q.trim()}%`);
+  const { data, error, count } = await query.range(page.from, page.to);
   if (error) return res.status(500).json({ message: "Erro ao buscar produtos.", detail: error.message });
-  return res.status(200).json(data);
+  return res.status(200).json({ data, pagination: { page: page.page, limit: page.limit, total: count ?? 0 } });
 });
 
 app.get("/produtos/:id", async (req, res) => {
@@ -102,10 +112,18 @@ app.delete("/produtos/:id", async (req, res) => {
   return res.status(200).json({ message: "Produto removido com sucesso." });
 });
 
-app.get("/pedidos", async (_req, res) => {
-  const { data, error } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false });
+app.get("/pedidos", async (req, res) => {
+  const page = pagination(req.query);
+  if (!page) return res.status(400).json({ message: "Use page maior que zero e limit entre 1 e 100." });
+  const statuses = ["recebido", "preparando", "saiu_para_entrega", "concluido", "cancelado"];
+  if (typeof req.query.status === "string" && !statuses.includes(req.query.status)) {
+    return res.status(400).json({ message: "Status inválido.", allowed: statuses });
+  }
+  let query = supabase.from("orders").select("*, order_items(*)", { count: "exact" }).order("created_at", { ascending: false });
+  if (typeof req.query.status === "string") query = query.eq("status", req.query.status);
+  const { data, error, count } = await query.range(page.from, page.to);
   if (error) return res.status(500).json({ message: "Erro ao buscar pedidos.", detail: error.message });
-  return res.status(200).json(data);
+  return res.status(200).json({ data, pagination: { page: page.page, limit: page.limit, total: count ?? 0 } });
 });
 
 app.get("/pedidos/:id", async (req, res) => {
