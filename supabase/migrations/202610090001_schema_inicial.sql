@@ -45,6 +45,11 @@ alter table public.products enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 
+grant usage on schema public to anon, authenticated, service_role;
+revoke all on table public.categories, public.products, public.orders, public.order_items from anon, authenticated;
+grant select on table public.categories, public.products to anon, authenticated;
+grant select, insert, update, delete on table public.categories, public.products, public.orders, public.order_items to service_role;
+
 drop policy if exists "Catalog is readable" on public.categories;
 create policy "Catalog is readable" on public.categories for select to anon, authenticated using (true);
 drop policy if exists "Available products are readable" on public.products;
@@ -65,7 +70,10 @@ begin
   if p_customer_name is null or length(trim(p_customer_name)) = 0 then
     raise exception 'Nome do cliente obrigatório';
   end if;
-  if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
+  if p_items is null or jsonb_typeof(p_items) is distinct from 'array' then
+    raise exception 'O pedido precisa ter ao menos um item';
+  end if;
+  if jsonb_array_length(p_items) = 0 then
     raise exception 'O pedido precisa ter ao menos um item';
   end if;
 
@@ -76,7 +84,7 @@ begin
   for item in select value from jsonb_array_elements(p_items)
   loop
     item_quantity := (item ->> 'quantity')::integer;
-    if item_quantity < 1 then raise exception 'Quantidade deve ser maior que zero'; end if;
+    if item_quantity is null or item_quantity < 1 then raise exception 'Quantidade deve ser maior que zero'; end if;
 
     select * into found_product
     from public.products
